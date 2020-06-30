@@ -5,307 +5,72 @@ import sys
 import numpy as np
 from pandas import DataFrame as df
 import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objects as go
 import cmath
 import xarray as xr
-from PIL import Image
 import igor.igorpy as igor
 import re
 import yaml
 from lmfit import model, Model
 from lmfit.models import GaussianModel, SkewedGaussianModel, VoigtModel, ConstantModel, LinearModel, QuadraticModel, PolynomialModel
 import ipywidgets as widgets
+from IPython.display import clear_output
 
+# SIF reader
 This_Dir = os.getcwd()
 sys.path.append(This_Dir + '/sif_reader/')
 import sif_reader
 
-class FitTools :
-    
-    def __init__(self,x,y,Name='') :
-        
-        self.x = x
-        self.y = y
-        self.Name = Name
+# Plotly settings
+import plotly.graph_objects as go
+import plotly.io as pio
+pio.renderers.default = 'notebook+plotly_mimetype'
+pio.templates.default = 'simple_white'
+pio.templates[pio.templates.default].layout.update(dict(
+    title_y = 0.95,
+    title_x = 0.5,
+    title_xanchor = 'center',
+    title_yanchor = 'top',
+    legend_x = 0,
+    legend_y = 1,
+    legend_traceorder = "normal",
+    legend_bgcolor='rgba(0,0,0,0)',
+    margin=go.layout.Margin(
+        l=0, #left margin
+        r=0, #right margin
+        b=0, #bottom margin
+        t=50, #top margin
+        )
+))
 
-    def BuiltInModels(self,ModelString) :
-        
-        for i in ModelString :
-            
-            try :
-                FitModel
-            except :
-                if i[1] == 'Constant' :
-                    FitModel = ConstantModel(prefix=i[0]+'_')
-                if i[1] == 'Linear' :
-                    FitModel = LinearModel(prefix=i[0]+'_')
-                if i[1] == 'Gaussian' :
-                    FitModel = GaussianModel(prefix=i[0]+'_')
-                if i[1] == 'SkewedGaussian' :
-                    FitModel = SkewedGaussianModel(prefix=i[0]+'_')
-                if i[1] == 'Voigt' :
-                    FitModel = VoigtModel(prefix=i[0]+'_')
-            else :
-                if i[1] == 'Constant' :
-                    FitModel = FitModel + ConstantModel(prefix=i[0]+'_')
-                if i[1] == 'Linear' :
-                    FitModel = FitModel + LinearModel(prefix=i[0]+'_')
-                if i[1] == 'Gaussian' :
-                    FitModel = FitModel + GaussianModel(prefix=i[0]+'_')
-                if i[1] == 'SkewedGaussian' :
-                    FitModel = FitModel + SkewedGaussianModel(prefix=i[0]+'_')
-                if i[1] == 'Voigt' :
-                    FitModel = FitModel + VoigtModel(prefix=i[0]+'_')
-        
-        self.ModelType = 'BuiltIn'
-        self.ModelString = ModelString
-        self.FitModel = FitModel
-        self.ModelParameters = FitModel.make_params()
-        
-    def SFGModel(self,ModelString) :
-        
-        Parameters = ModelString
-        
-        if len(ModelString) == 2 :
-            def SFGFunction(x,NonRes_amp,
-                            Peak1_amp,Peak1_phi,Peak1_omega,Peak1_gamma) :
-                Peaks = NonRes_amp
-                Peaks+= Peak1_amp*(cmath.exp(Peak1_phi*1j)/(x-Peak1_omega+Peak1_gamma*1j))
-                return np.real(Peaks*np.conjugate(Peaks))
-        elif len(ModelString) == 3 :
-            def SFGFunction(x,NonRes_amp,
-                            Peak1_amp,Peak1_phi,Peak1_omega,Peak1_gamma,
-                            Peak2_amp,Peak2_phi,Peak2_omega,Peak2_gamma) :
-                Peaks = NonRes_amp
-                Peaks+= Peak1_amp*(cmath.exp(Peak1_phi*1j)/(x-Peak1_omega+Peak1_gamma*1j))
-                Peaks+= Peak2_amp*(cmath.exp(Peak2_phi*1j)/(x-Peak2_omega+Peak2_gamma*1j))
-                return np.real(Peaks*np.conjugate(Peaks))
-        elif len(ModelString) == 4 :
-            def SFGFunction(x,NonRes_amp,
-                            Peak1_amp,Peak1_phi,Peak1_omega,Peak1_gamma,
-                            Peak2_amp,Peak2_phi,Peak2_omega,Peak2_gamma,
-                            Peak3_amp,Peak3_phi,Peak3_omega,Peak3_gamma) :
-                Peaks = NonRes_amp
-                Peaks+= Peak1_amp*(cmath.exp(Peak1_phi*1j)/(x-Peak1_omega+Peak1_gamma*1j))
-                Peaks+= Peak2_amp*(cmath.exp(Peak2_phi*1j)/(x-Peak2_omega+Peak2_gamma*1j))
-                Peaks+= Peak3_amp*(cmath.exp(Peak3_phi*1j)/(x-Peak3_omega+Peak3_gamma*1j))
-                return np.real(Peaks*np.conjugate(Peaks))
-        elif len(ModelString) == 5 :
-            def SFGFunction(x,NonRes_amp,
-                            Peak1_amp,Peak1_phi,Peak1_omega,Peak1_gamma,
-                            Peak2_amp,Peak2_phi,Peak2_omega,Peak2_gamma,
-                            Peak3_amp,Peak3_phi,Peak3_omega,Peak3_gamma,
-                            Peak4_amp,Peak4_phi,Peak4_omega,Peak4_gamma) :
-                Peaks = NonRes_amp
-                Peaks+= Peak1_amp*(cmath.exp(Peak1_phi*1j)/(x-Peak1_omega+Peak1_gamma*1j))
-                Peaks+= Peak2_amp*(cmath.exp(Peak2_phi*1j)/(x-Peak2_omega+Peak2_gamma*1j))
-                Peaks+= Peak3_amp*(cmath.exp(Peak3_phi*1j)/(x-Peak3_omega+Peak3_gamma*1j))
-                Peaks+= Peak4_amp*(cmath.exp(Peak4_phi*1j)/(x-Peak4_omega+Peak4_gamma*1j))
-                return np.real(Peaks*np.conjugate(Peaks))
-        elif len(ModelString) == 6 :
-            def SFGFunction(x,NonRes_amp,
-                            Peak1_amp,Peak1_phi,Peak1_omega,Peak1_gamma,
-                            Peak2_amp,Peak2_phi,Peak2_omega,Peak2_gamma,
-                            Peak3_amp,Peak3_phi,Peak3_omega,Peak3_gamma,
-                            Peak4_amp,Peak4_phi,Peak4_omega,Peak4_gamma,
-                            Peak5_amp,Peak5_phi,Peak5_omega,Peak5_gamma) :
-                Peaks = NonRes_amp
-                Peaks+= Peak1_amp*(cmath.exp(Peak1_phi*1j)/(x-Peak1_omega+Peak1_gamma*1j))
-                Peaks+= Peak2_amp*(cmath.exp(Peak2_phi*1j)/(x-Peak2_omega+Peak2_gamma*1j))
-                Peaks+= Peak3_amp*(cmath.exp(Peak3_phi*1j)/(x-Peak3_omega+Peak3_gamma*1j))
-                Peaks+= Peak4_amp*(cmath.exp(Peak4_phi*1j)/(x-Peak4_omega+Peak4_gamma*1j))
-                Peaks+= Peak5_amp*(cmath.exp(Peak5_phi*1j)/(x-Peak5_omega+Peak5_gamma*1j))
-                return np.real(Peaks*np.conjugate(Peaks))
-        elif len(ModelString) == 7 :
-            def SFGFunction(x,NonRes_amp,
-                            Peak1_amp,Peak1_phi,Peak1_omega,Peak1_gamma,
-                            Peak2_amp,Peak2_phi,Peak2_omega,Peak2_gamma,
-                            Peak3_amp,Peak3_phi,Peak3_omega,Peak3_gamma,
-                            Peak4_amp,Peak4_phi,Peak4_omega,Peak4_gamma,
-                            Peak5_amp,Peak5_phi,Peak5_omega,Peak5_gamma,
-                            Peak6_amp,Peak6_phi,Peak6_omega,Peak6_gamma) :
-                Peaks = NonRes_amp
-                Peaks+= Peak1_amp*(cmath.exp(Peak1_phi*1j)/(x-Peak1_omega+Peak1_gamma*1j))
-                Peaks+= Peak2_amp*(cmath.exp(Peak2_phi*1j)/(x-Peak2_omega+Peak2_gamma*1j))
-                Peaks+= Peak3_amp*(cmath.exp(Peak3_phi*1j)/(x-Peak3_omega+Peak3_gamma*1j))
-                Peaks+= Peak4_amp*(cmath.exp(Peak4_phi*1j)/(x-Peak4_omega+Peak4_gamma*1j))
-                Peaks+= Peak5_amp*(cmath.exp(Peak5_phi*1j)/(x-Peak5_omega+Peak5_gamma*1j))
-                Peaks+= Peak6_amp*(cmath.exp(Peak6_phi*1j)/(x-Peak6_omega+Peak6_gamma*1j))
-                return np.real(Peaks*np.conjugate(Peaks))
-        elif len(ModelString) == 8 :
-            def SFGFunction(x,NonRes_amp,
-                            Peak1_amp,Peak1_phi,Peak1_omega,Peak1_gamma,
-                            Peak2_amp,Peak2_phi,Peak2_omega,Peak2_gamma,
-                            Peak3_amp,Peak3_phi,Peak3_omega,Peak3_gamma,
-                            Peak4_amp,Peak4_phi,Peak4_omega,Peak4_gamma,
-                            Peak5_amp,Peak5_phi,Peak5_omega,Peak5_gamma,
-                            Peak6_amp,Peak6_phi,Peak6_omega,Peak6_gamma,
-                            Peak7_amp,Peak7_phi,Peak7_omega,Peak7_gamma) :
-                Peaks = NonRes_amp
-                Peaks+= Peak1_amp*(cmath.exp(Peak1_phi*1j)/(x-Peak1_omega+Peak1_gamma*1j))
-                Peaks+= Peak2_amp*(cmath.exp(Peak2_phi*1j)/(x-Peak2_omega+Peak2_gamma*1j))
-                Peaks+= Peak3_amp*(cmath.exp(Peak3_phi*1j)/(x-Peak3_omega+Peak3_gamma*1j))
-                Peaks+= Peak4_amp*(cmath.exp(Peak4_phi*1j)/(x-Peak4_omega+Peak4_gamma*1j))
-                Peaks+= Peak5_amp*(cmath.exp(Peak5_phi*1j)/(x-Peak5_omega+Peak5_gamma*1j))
-                Peaks+= Peak6_amp*(cmath.exp(Peak6_phi*1j)/(x-Peak6_omega+Peak6_gamma*1j))
-                Peaks+= Peak7_amp*(cmath.exp(Peak7_phi*1j)/(x-Peak7_omega+Peak7_gamma*1j))
-                return np.real(Peaks*np.conjugate(Peaks))
-        elif len(ModelString) == 9 :
-            def SFGFunction(x,NonRes_amp,
-                            Peak1_amp,Peak1_phi,Peak1_omega,Peak1_gamma,
-                            Peak2_amp,Peak2_phi,Peak2_omega,Peak2_gamma,
-                            Peak3_amp,Peak3_phi,Peak3_omega,Peak3_gamma,
-                            Peak4_amp,Peak4_phi,Peak4_omega,Peak4_gamma,
-                            Peak5_amp,Peak5_phi,Peak5_omega,Peak5_gamma,
-                            Peak6_amp,Peak6_phi,Peak6_omega,Peak6_gamma,
-                            Peak7_amp,Peak7_phi,Peak7_omega,Peak7_gamma,
-                            Peak8_amp,Peak8_phi,Peak8_omega,Peak8_gamma) :
-                Peaks = NonRes_amp
-                Peaks+= Peak1_amp*(cmath.exp(Peak1_phi*1j)/(x-Peak1_omega+Peak1_gamma*1j))
-                Peaks+= Peak2_amp*(cmath.exp(Peak2_phi*1j)/(x-Peak2_omega+Peak2_gamma*1j))
-                Peaks+= Peak3_amp*(cmath.exp(Peak3_phi*1j)/(x-Peak3_omega+Peak3_gamma*1j))
-                Peaks+= Peak4_amp*(cmath.exp(Peak4_phi*1j)/(x-Peak4_omega+Peak4_gamma*1j))
-                Peaks+= Peak5_amp*(cmath.exp(Peak5_phi*1j)/(x-Peak5_omega+Peak5_gamma*1j))
-                Peaks+= Peak6_amp*(cmath.exp(Peak6_phi*1j)/(x-Peak6_omega+Peak6_gamma*1j))
-                Peaks+= Peak8_amp*(cmath.exp(Peak8_phi*1j)/(x-Peak8_omega+Peak8_gamma*1j))
-                return np.real(Peaks*np.conjugate(Peaks))
-        
-        FitModel = Model(SFGFunction)
-        ModelParameters = FitModel.make_params()
-        
-        self.ModelType = 'SFG'
-        self.ModelString = ModelString
-        self.FitModel = FitModel
-        self.ModelParameters = ModelParameters
-    
-    def SetParameters(self,Parameters) :
-        
-        for Model in Parameters :
-            for Parameter in Parameters[Model] :
-                if Parameter != 'model' and Parameter != 'assignment' :
-                    for Key in Parameters[Model][Parameter] :
-                        exec('self.ModelParameters["'+Model+'_'+Parameter+'"].'+Key+'='+str(Parameters[Model][Parameter][Key]))
-                        
-        self.Parameters = Parameters
-    
-    def Fit(self,**kwargs) :
-        
-        x = self.x
-        y = self.y
-        Name = self.Name
-        FitModel = self.FitModel
-        Parameters = self.Parameters
-        ModelParameters = self.ModelParameters
-        FitResults = FitModel.fit(y, ModelParameters, x=x)
-        
-        try:
-            fit_x
-        except :
-            try :
-                NumberPoints
-            except :
-                fit_x = x
-            else :
-                for i in NumberPoints :
-                    fit_x[i] = min(x) + i * (max(x) - min(x)) / (Numberpoints - 1)
-                
-        fit_comps = FitResults.eval_components(FitResults.params, x=fit_x)
-        fit_y = FitResults.eval(x=fit_x)
-        
-        ParameterNames = [i for i in FitResults.params.keys()]
-        FitParameters = np.zeros((1,len(ParameterNames)))
-        for i in range(len(ParameterNames)) :
-            FitParameters[0,i] = FitResults.params[ParameterNames[i]].value
-        if Name == '' :
-            FitParameters = df(data=FitParameters,columns=ParameterNames)
-        else :
-            FitParameters = df(data=FitParameters,columns=ParameterNames,index=[Name])
-            
-        for idx,name in enumerate(FitParameters.columns):
-            Model = name.split('_')
-            try :
-                Parameters[Model[0]]['assignment']
-            except :
-                pass
-            else :
-                OldName = Model[0] + '_' + Model[1]
-                NewName = Parameters[Model[0]]['assignment'] + '_' + Model[1]
-                FitParameters.rename(columns={OldName:NewName}, inplace=True)
-        
-        Fit = np.array((fit_x,fit_y))
-        Fit = df(np.transpose(Fit),columns=('x','y'))
-        
-        self.x = x
-        self.y = y
-        self.FitParameters = FitParameters
-        self.Fit = Fit
-        self.FitResults = FitResults
-        self.fit_comps = fit_comps
-    
-    def Plot(self,Title='',xLabel='',yLabel='') :
-        
-        x = self.x
-        y = self.y
-        Name = self.Name
-        ModelString = self.ModelString
-        ModelType = self.ModelType
-        Fit = self.Fit
-        fit_comps = self.fit_comps
-        
-        if Title == '' and not Name == '' :
-            Title = str(Name)
-        
-        plt.figure(figsize = [6,4])
-        plt.plot(x, y,'k.', label='Data')
-        if ModelType == 'BuiltIn' :
-            plt.plot(Fit['x'], Fit['y'], 'r--', label='Fit')
-            for i in ModelString :
-                if i[1] == 'Linear' :
-                    plt.plot(Fit['x'], fit_comps[i[0]+'_'], 'k--', label=i[0])
-                if i[1] == 'Gaussian' :
-                    plt.fill(Fit['x'], fit_comps[i[0]+'_'], '--', label=i[0], alpha=0.5)
-                if i[1] == 'SkewedGaussian' :
-                    plt.fill(Fit['x'], fit_comps[i[0]+'_'], '--', label=i[0], alpha=0.5)
-                if i[1] == 'Voigt' :
-                    plt.fill(Fit['x'], fit_comps[i[0]+'_'], '--', label=i[0], alpha=0.5)
-        elif ModelType == 'SFG' :
-            plt.plot(Fit['x'], Fit['y'], 'r-', label='Fit')
-        plt.legend(frameon=False, loc='upper center', bbox_to_anchor=(1.2, 1), ncol=1)
-        plt.xlabel(xLabel), plt.ylabel(yLabel)
-        plt.xlim(min(x),max(x))
-        plt.title(Title)
-        plt.show()
-    
-    def PrintParameters(self) :
-        
-        FitParameters = self.FitParameters
-        Parameters = self.Parameters
-
-        ParameterNames = list()
-        ParameterAttributes = list()
-
-        for Parameter in FitParameters.columns :
-            Name = Parameter.split('_')[0]
-            if Name not in ParameterNames :
-                ParameterNames.append(Name)
-
-        ParameterAttributes = {}
-        for i in ParameterNames :
-            Attributes = {}
-            for j in FitParameters :
-                if j.startswith(i) :
-                    Attributes.update({j.split('_')[1]: FitParameters[j].values[0]})
-            ParameterAttributes.update({i:Attributes})
-        
-        FitParameters = ParameterAttributes
-        string = ''
-        for i in FitParameters :
-            string = string + i + ' | '
-            for idx, j in enumerate(FitParameters[i]) :
-                string = string + j + ': ' + str(round(FitParameters[i][j],2))
-                if idx < len(FitParameters[i]) - 1 :
-                    string = string  + ', '
-            string = string + '\n'
-        print(string)
+SmallPlotLayout = go.Layout(
+    margin=go.layout.Margin(
+        l=0, #left margin
+        r=0, #right margin
+        b=0, #bottom margin
+        t=0, #top margin
+        ),
+    width=300,
+    height=300,
+    hoverdistance=100, # Distance to show hover label of data point
+    spikedistance=1000, # Distance to show spike
+    xaxis=dict(
+        showspikes=True, # Show spike line for X-axis
+        spikethickness=2,
+        spikedash="dot",
+        spikecolor="#999999",
+        spikemode="across",
+        showgrid=False
+        ),
+    yaxis=dict(
+        showgrid=False
+        ),
+    legend=dict(
+        itemclick="toggleothers",
+        itemdoubleclick="toggle",
+        ),
+    )
 
 class DataTools :
     
@@ -323,9 +88,9 @@ class DataTools :
         
         return FileList
     
-    def LoadData(self,ParameterFile) :
+    def LoadData(self,InfoFile) :
         
-        with open(ParameterFile+'.yaml', 'r') as stream:
+        with open(InfoFile[0]+'/'+InfoFile[1]+'.yaml', 'r') as stream:
             Parameters = yaml.safe_load(stream)
         
         FolderPath = Parameters['FolderPath']
@@ -439,178 +204,460 @@ class DataTools :
         
         return x, y
     
-    def ReduceData(self,Data,CutoffTemp,Resolution=1) :
+    def ReduceData(self,Data,yCutoff=2000,Resolution=1) :
         
-        Cutoff = (np.abs(Data.columns.values - CutoffTemp)).argmin() + 1
+        Cutoff = (np.abs(Data.columns.values - yCutoff)).argmin() + 1
         Data = Data.drop(Data.columns[Cutoff:], 1)
         
         Counter = 0
         ReducedData = df()
         for i in range(int(len(Data.columns.values)/Resolution)) :
-            Temperature = round(np.mean(Data.columns[Counter:Counter+Resolution]),1)
-            ReducedData[Temperature] = Data[Data.columns[Counter:Counter+Resolution]].mean(axis=1)
+            Column = round(np.mean(Data.columns[Counter:Counter+Resolution]),1)
+            ReducedData[Column] = Data[Data.columns[Counter:Counter+Resolution]].mean(axis=1)
             Counter = Counter + Resolution
         
         return ReducedData
-    
-    def Plot(self,x,y,Title='',xLabel='',yLabel='') :
 
-        plt.figure(figsize = [6,4])
-        plt.plot(x, y,'k.')
-        plt.xlabel(xLabel), plt.ylabel(yLabel)
-        plt.title(Title)
-        plt.show()
+class FitTools :
     
+    def __init__(self,Data,FitInfo,Name='') :
+        
+        try :
+            FitInfo['ModelType']
+            FitInfo['Models']
+        except:
+            ModelType = 'None'
+            ModelString = ''
+        else :
+            if FitInfo['ModelType'] == 'BuiltIn' :
+                self.BuiltInModels(FitInfo)
+            if FitInfo['ModelType'] == 'SFG' :
+                self.SFGModel(FitInfo)
+            for Model in FitInfo['Models'] :
+                for Parameter in FitInfo['Models'][Model] :
+                    if Parameter != 'model' and Parameter != 'assignment' :
+                        for Key in FitInfo['Models'][Model][Parameter] :
+                            exec('self.ModelParameters["'+Model+'_'+Parameter+'"].'+Key+'='+str(FitInfo['Models'][Model][Parameter][Key]))
+        
+        self.Data = Data
+        self.FitInfo = FitInfo
+        self.Name = Name
+
+    def BuiltInModels(self,FitInfo) :
+        
+        ModelString = list()
+        for key in FitInfo['Models'] :
+            ModelString.append((key,FitInfo['Models'][key]['model']))
+        
+        for Model in ModelString :
+            try :
+                FitModel
+            except :
+                if Model[1] == 'Constant' :
+                    FitModel = ConstantModel(prefix=Model[0]+'_')
+                if Model[1] == 'Linear' :
+                    FitModel = LinearModel(prefix=Model[0]+'_')
+                if Model[1] == 'Gaussian' :
+                    FitModel = GaussianModel(prefix=Model[0]+'_')
+                if Model[1] == 'SkewedGaussian' :
+                    FitModel = SkewedGaussianModel(prefix=Model[0]+'_')
+                if Model[1] == 'Voigt' :
+                    FitModel = VoigtModel(prefix=Model[0]+'_')
+            else :
+                if Model[1] == 'Constant' :
+                    FitModel = FitModel + ConstantModel(prefix=Model[0]+'_')
+                if Model[1] == 'Linear' :
+                    FitModel = FitModel + LinearModel(prefix=Model[0]+'_')
+                if Model[1] == 'Gaussian' :
+                    FitModel = FitModel + GaussianModel(prefix=Model[0]+'_')
+                if Model[1] == 'SkewedGaussian' :
+                    FitModel = FitModel + SkewedGaussianModel(prefix=Model[0]+'_')
+                if Model[1] == 'Voigt' :
+                    FitModel = FitModel + VoigtModel(prefix=Model[0]+'_')
+        
+        self.FitModel = FitModel
+        self.ModelParameters = FitModel.make_params()
+        
+    def SFGModel(self,FitInfo) :
+        
+        ModelString = list()
+        for key in FitInfo['Models'] :
+            ModelString.append([key])
+        
+        if len(ModelString) == 2 :
+            def SFGFunction(x,NonRes_amp,
+                            Peak1_amp,Peak1_phi,Peak1_omega,Peak1_gamma) :
+                Peaks = NonRes_amp
+                Peaks+= Peak1_amp*(cmath.exp(Peak1_phi*1j)/(x-Peak1_omega+Peak1_gamma*1j))
+                return np.real(Peaks*np.conjugate(Peaks))
+        elif len(ModelString) == 3 :
+            def SFGFunction(x,NonRes_amp,
+                            Peak1_amp,Peak1_phi,Peak1_omega,Peak1_gamma,
+                            Peak2_amp,Peak2_phi,Peak2_omega,Peak2_gamma) :
+                Peaks = NonRes_amp
+                Peaks+= Peak1_amp*(cmath.exp(Peak1_phi*1j)/(x-Peak1_omega+Peak1_gamma*1j))
+                Peaks+= Peak2_amp*(cmath.exp(Peak2_phi*1j)/(x-Peak2_omega+Peak2_gamma*1j))
+                return np.real(Peaks*np.conjugate(Peaks))
+        elif len(ModelString) == 4 :
+            def SFGFunction(x,NonRes_amp,
+                            Peak1_amp,Peak1_phi,Peak1_omega,Peak1_gamma,
+                            Peak2_amp,Peak2_phi,Peak2_omega,Peak2_gamma,
+                            Peak3_amp,Peak3_phi,Peak3_omega,Peak3_gamma) :
+                Peaks = NonRes_amp
+                Peaks+= Peak1_amp*(cmath.exp(Peak1_phi*1j)/(x-Peak1_omega+Peak1_gamma*1j))
+                Peaks+= Peak2_amp*(cmath.exp(Peak2_phi*1j)/(x-Peak2_omega+Peak2_gamma*1j))
+                Peaks+= Peak3_amp*(cmath.exp(Peak3_phi*1j)/(x-Peak3_omega+Peak3_gamma*1j))
+                return np.real(Peaks*np.conjugate(Peaks))
+        elif len(ModelString) == 5 :
+            def SFGFunction(x,NonRes_amp,
+                            Peak1_amp,Peak1_phi,Peak1_omega,Peak1_gamma,
+                            Peak2_amp,Peak2_phi,Peak2_omega,Peak2_gamma,
+                            Peak3_amp,Peak3_phi,Peak3_omega,Peak3_gamma,
+                            Peak4_amp,Peak4_phi,Peak4_omega,Peak4_gamma) :
+                Peaks = NonRes_amp
+                Peaks+= Peak1_amp*(cmath.exp(Peak1_phi*1j)/(x-Peak1_omega+Peak1_gamma*1j))
+                Peaks+= Peak2_amp*(cmath.exp(Peak2_phi*1j)/(x-Peak2_omega+Peak2_gamma*1j))
+                Peaks+= Peak3_amp*(cmath.exp(Peak3_phi*1j)/(x-Peak3_omega+Peak3_gamma*1j))
+                Peaks+= Peak4_amp*(cmath.exp(Peak4_phi*1j)/(x-Peak4_omega+Peak4_gamma*1j))
+                return np.real(Peaks*np.conjugate(Peaks))
+        elif len(ModelString) == 6 :
+            def SFGFunction(x,NonRes_amp,
+                            Peak1_amp,Peak1_phi,Peak1_omega,Peak1_gamma,
+                            Peak2_amp,Peak2_phi,Peak2_omega,Peak2_gamma,
+                            Peak3_amp,Peak3_phi,Peak3_omega,Peak3_gamma,
+                            Peak4_amp,Peak4_phi,Peak4_omega,Peak4_gamma,
+                            Peak5_amp,Peak5_phi,Peak5_omega,Peak5_gamma) :
+                Peaks = NonRes_amp
+                Peaks+= Peak1_amp*(cmath.exp(Peak1_phi*1j)/(x-Peak1_omega+Peak1_gamma*1j))
+                Peaks+= Peak2_amp*(cmath.exp(Peak2_phi*1j)/(x-Peak2_omega+Peak2_gamma*1j))
+                Peaks+= Peak3_amp*(cmath.exp(Peak3_phi*1j)/(x-Peak3_omega+Peak3_gamma*1j))
+                Peaks+= Peak4_amp*(cmath.exp(Peak4_phi*1j)/(x-Peak4_omega+Peak4_gamma*1j))
+                Peaks+= Peak5_amp*(cmath.exp(Peak5_phi*1j)/(x-Peak5_omega+Peak5_gamma*1j))
+                return np.real(Peaks*np.conjugate(Peaks))
+        elif len(ModelString) == 7 :
+            def SFGFunction(x,NonRes_amp,
+                            Peak1_amp,Peak1_phi,Peak1_omega,Peak1_gamma,
+                            Peak2_amp,Peak2_phi,Peak2_omega,Peak2_gamma,
+                            Peak3_amp,Peak3_phi,Peak3_omega,Peak3_gamma,
+                            Peak4_amp,Peak4_phi,Peak4_omega,Peak4_gamma,
+                            Peak5_amp,Peak5_phi,Peak5_omega,Peak5_gamma,
+                            Peak6_amp,Peak6_phi,Peak6_omega,Peak6_gamma) :
+                Peaks = NonRes_amp
+                Peaks+= Peak1_amp*(cmath.exp(Peak1_phi*1j)/(x-Peak1_omega+Peak1_gamma*1j))
+                Peaks+= Peak2_amp*(cmath.exp(Peak2_phi*1j)/(x-Peak2_omega+Peak2_gamma*1j))
+                Peaks+= Peak3_amp*(cmath.exp(Peak3_phi*1j)/(x-Peak3_omega+Peak3_gamma*1j))
+                Peaks+= Peak4_amp*(cmath.exp(Peak4_phi*1j)/(x-Peak4_omega+Peak4_gamma*1j))
+                Peaks+= Peak5_amp*(cmath.exp(Peak5_phi*1j)/(x-Peak5_omega+Peak5_gamma*1j))
+                Peaks+= Peak6_amp*(cmath.exp(Peak6_phi*1j)/(x-Peak6_omega+Peak6_gamma*1j))
+                return np.real(Peaks*np.conjugate(Peaks))
+        elif len(ModelString) == 8 :
+            def SFGFunction(x,NonRes_amp,
+                            Peak1_amp,Peak1_phi,Peak1_omega,Peak1_gamma,
+                            Peak2_amp,Peak2_phi,Peak2_omega,Peak2_gamma,
+                            Peak3_amp,Peak3_phi,Peak3_omega,Peak3_gamma,
+                            Peak4_amp,Peak4_phi,Peak4_omega,Peak4_gamma,
+                            Peak5_amp,Peak5_phi,Peak5_omega,Peak5_gamma,
+                            Peak6_amp,Peak6_phi,Peak6_omega,Peak6_gamma,
+                            Peak7_amp,Peak7_phi,Peak7_omega,Peak7_gamma) :
+                Peaks = NonRes_amp
+                Peaks+= Peak1_amp*(cmath.exp(Peak1_phi*1j)/(x-Peak1_omega+Peak1_gamma*1j))
+                Peaks+= Peak2_amp*(cmath.exp(Peak2_phi*1j)/(x-Peak2_omega+Peak2_gamma*1j))
+                Peaks+= Peak3_amp*(cmath.exp(Peak3_phi*1j)/(x-Peak3_omega+Peak3_gamma*1j))
+                Peaks+= Peak4_amp*(cmath.exp(Peak4_phi*1j)/(x-Peak4_omega+Peak4_gamma*1j))
+                Peaks+= Peak5_amp*(cmath.exp(Peak5_phi*1j)/(x-Peak5_omega+Peak5_gamma*1j))
+                Peaks+= Peak6_amp*(cmath.exp(Peak6_phi*1j)/(x-Peak6_omega+Peak6_gamma*1j))
+                Peaks+= Peak7_amp*(cmath.exp(Peak7_phi*1j)/(x-Peak7_omega+Peak7_gamma*1j))
+                return np.real(Peaks*np.conjugate(Peaks))
+        elif len(ModelString) == 9 :
+            def SFGFunction(x,NonRes_amp,
+                            Peak1_amp,Peak1_phi,Peak1_omega,Peak1_gamma,
+                            Peak2_amp,Peak2_phi,Peak2_omega,Peak2_gamma,
+                            Peak3_amp,Peak3_phi,Peak3_omega,Peak3_gamma,
+                            Peak4_amp,Peak4_phi,Peak4_omega,Peak4_gamma,
+                            Peak5_amp,Peak5_phi,Peak5_omega,Peak5_gamma,
+                            Peak6_amp,Peak6_phi,Peak6_omega,Peak6_gamma,
+                            Peak7_amp,Peak7_phi,Peak7_omega,Peak7_gamma,
+                            Peak8_amp,Peak8_phi,Peak8_omega,Peak8_gamma) :
+                Peaks = NonRes_amp
+                Peaks+= Peak1_amp*(cmath.exp(Peak1_phi*1j)/(x-Peak1_omega+Peak1_gamma*1j))
+                Peaks+= Peak2_amp*(cmath.exp(Peak2_phi*1j)/(x-Peak2_omega+Peak2_gamma*1j))
+                Peaks+= Peak3_amp*(cmath.exp(Peak3_phi*1j)/(x-Peak3_omega+Peak3_gamma*1j))
+                Peaks+= Peak4_amp*(cmath.exp(Peak4_phi*1j)/(x-Peak4_omega+Peak4_gamma*1j))
+                Peaks+= Peak5_amp*(cmath.exp(Peak5_phi*1j)/(x-Peak5_omega+Peak5_gamma*1j))
+                Peaks+= Peak6_amp*(cmath.exp(Peak6_phi*1j)/(x-Peak6_omega+Peak6_gamma*1j))
+                Peaks+= Peak8_amp*(cmath.exp(Peak8_phi*1j)/(x-Peak8_omega+Peak8_gamma*1j))
+                return np.real(Peaks*np.conjugate(Peaks))
+        
+        FitModel = Model(SFGFunction)
+        ModelParameters = FitModel.make_params()
+        
+        self.FitModel = FitModel
+        self.ModelParameters = ModelParameters
+    
+    def Fit(self,**kwargs) :
+        
+        Data = self.Data
+        Name = self.Name
+        FitModel = self.FitModel
+        ModelParameters = self.ModelParameters
+        FitInfo = self.FitInfo
+        
+        Fits = df(index=Data.index.values,columns=Data.columns.values)
+        FitsParameters = df(index=ModelParameters.keys(),columns=Data.columns.values)
+        FitsResults = list()
+        FitsComponents = list()
+        
+        for idx,Column in enumerate(Data) :
+            x = Data.index.values
+            y = Data[Column].values
+            FitResults = FitModel.fit(y, ModelParameters, x=x)
+            try:
+                fit_x
+            except :
+                try :
+                    NumberPoints
+                except :
+                    fit_x = x
+                else :
+                    for i in NumberPoints :
+                        fit_x[i] = min(x) + i * (max(x) - min(x)) / (Numberpoints - 1)
+            
+            fit_comps = FitResults.eval_components(FitResults.params, x=fit_x)
+            fit_y = FitResults.eval(x=fit_x)
+            ParameterNames = [i for i in FitResults.params.keys()]
+            FitParameters = np.zeros((1,len(ParameterNames)))
+            for Parameter in (ParameterNames) :
+                FitsParameters[Column][Parameter] = FitResults.params[Parameter].value
+            Fits[Column] = fit_y
+            FitsResults.append(FitResults)
+            FitsComponents.append(fit_comps)
+            
+            sys.stdout.write(("\rFitting %i out of "+str(Data.shape[1])) % (idx+1))
+            sys.stdout.flush()
+        
+        self.Fits = Fits
+        self.FitsParameters = FitsParameters
+        self.FitsResults = FitsResults
+        self.FitsComponents = FitsComponents
+    
+    def ShowFits(self,xLabel='',yLabel='') :
+        
+        Data = self.Data
+        Fits = self.Fits
+        
+        FitsParameters = self.FitsParameters
+        FitsComponents = self.FitsComponents
+        
+        for idx,Column in enumerate(Data) :
+            
+            plt.figure(figsize = [6,4])
+            plt.plot(Data.index, Data[Column],'k.', label='Data')
+            plt.plot(Fits.index, Fits[Column], 'r-', label='Fit')
+            for Component in FitsComponents[idx] :
+                if not isinstance(FitsComponents[idx][Component],float) :
+                    plt.fill(Fits.index, FitsComponents[idx][Component], '--', label=Component, alpha=0.5)
+            plt.legend(frameon=False, loc='upper center', bbox_to_anchor=(1.2, 1), ncol=1)
+            plt.xlabel(xLabel), plt.ylabel(yLabel)
+            plt.title(str(Column))
+            plt.show()
+            
+            Peaks = list()
+            for Parameter in FitsParameters.index :
+                Name = Parameter.split('_')[0]
+                if Name not in Peaks :
+                    Peaks.append(Name)
+
+            string = ''
+            for Peak in Peaks :
+                string = string + Peak + ' | '
+                for Parameter in FitsParameters.index :
+                    if Peak == Parameter.split('_')[0] : 
+                        string = string + Parameter.split('_')[1] + ': ' + str(round(FitsParameters[Column][Parameter],2))
+                        string = string + ', '
+                string = string[:-2] + '\n'
+            print(string)
+            print(75*'_')
+
 class SFG :
     
-    def __init__(self,ParameterFile) :
+    def __init__(self,InfoFile) :
         
         dt = DataTools()
         
-        Data, Parameters = dt.LoadData(ParameterFile)
-        
-        Threshold = Parameters['Background']['Threshold']
-        
+        Data, Info = dt.LoadData(InfoFile)
+        Threshold = Info['Background']['Threshold']
         Data = dt.RemoveEmptyDataSets(Data,Threshold)
         
-        self.ParameterFile = ParameterFile
-        self.Parameters = Parameters
+        self.InfoFile = InfoFile
+        self.Info = Info
         self.Data = Data
     
     def ReloadData(self) :
         
         dt = DataTools()
         
-        ParameterFile = self.ParameterFile
+        InfoFile = self.InfoFile
         
-        Data, Parameters = dt.LoadData(ParameterFile)
+        Data, Info = dt.LoadData(InfoFile)
         
         self.Data = Data
-        self.Parameters = Parameters
-    
-    def GetBackground(self) :
-        
-        Parameters = self.Parameters
-        Data = self.Data
-        
-        TMin = Parameters['Background']['TempRange'][0]
-        TMax = Parameters['Background']['TempRange'][1]
-        
-        DataNames = list()
-        for i in Data.columns :
-            if i > TMin and i < TMax :
-                DataNames.append(i)
-        Background = df(Data[DataNames].mean(axis=1),columns=['Data'])
-        
-        try :
-            Parameters['Background']['Models']
-        except :
-            dt = DataTools()
-            dt.Plot(Data.index.values,Background['Data'].values,Title='Background',xLabel='Wavenumber',yLabel='Intensity')
-        else :
-            x = Background.index.values
-            y = Background['Data'].values
-            fit = FitTools(x,y,'Background')
-            Models = Parameters['Background']['Models']
-            ModelString = list()
-            for key in Models :
-                ModelString.append([key,Models[key]['model']])
-            fit.BuiltInModels(ModelString)
-            fit.SetParameters(Parameters['Background']['Models'])
-            fit.Fit()
-            fit.Plot(Title='Background',xLabel='Wavenumber',yLabel='Intensity')
-            fit.PrintParameters()
-            
-            Background['Fit'] = fit.Fit['y'].values
-            self.BackgroundFit = {'FitModel': fit.FitModel, 'FitParameters': fit.FitParameters, 'FitResults': fit.FitResults, 'ModelParameters': fit.ModelParameters}
-            
-        print("_"*100)
-        
-        self.Background = Background
+        self.Info = Info
     
     def FitData(self) :
         
-        dt = DataTools()
-        
-        Parameters = self.Parameters
         Data = self.Data
-        Background = self.Background
+        Info = self.Info
         
-        xMin = Parameters['ROI'][0]
-        xMax = Parameters['ROI'][1]
-        TempCutoff = Parameters['Background']['TempRange'][0]
-        Resolution = Parameters['Resolution']
+        ##### Fit Data #####
         
-        Data = dt.ReduceData(Data,TempCutoff,Resolution)
-        
-        try :
-            Background['Fit']
-        except :
-            Backgroundy = Background['Data'].values
-        else :
-            Backgroundy = Background['Fit'].values
-        x = Data.index.values
-        FitParameters = df()
-        Models = Parameters['Data']['Models']
-        ModelString = list()
-        for key in Models :
-            ModelString.append([key])
+        dt = DataTools()
+
+        TBackground = Info['Background']['TempRange']
+        DataNames = list()
         for i in Data.columns :
-            
-            y = Data[i].values
-            y1 = y / Backgroundy
-            x1,y1 = dt.TrimData(x,y1,xMin,xMax)
-            fit = FitTools(x1,y1,i)
-            fit.SFGModel(ModelString)
-            fit.SetParameters(Parameters['Data']['Models'])
-            fit.Fit(fit_x=x)
-            fit.Plot(Title=('Temperature: ' + str(i) + ' K'),xLabel='Wavenumber ($cm^{-1}$)',yLabel='Intensity (au)')
-            fit.PrintParameters()
-            
-            fit_y = fit.FitResults.eval(x=x)
-            fit_y = fit_y * Backgroundy
-            fig = plt.figure(figsize=(5,5))
-            plt.plot(x, y,'k.', label=str(i)+' K')
-            plt.plot(x,fit_y, 'r-', label='fit')
-            plt.xlabel('Wavenumber ($cm^{-1}$)')
-            plt.ylabel('Temperature (K)')
-            plt.title('Data: '+Parameters['DataName'])
-            plt.legend(), plt.xlabel('Energy (cm-1)'), plt.ylabel('Signal (au)')
-            plt.show()
-            
-            try :
-                Fits
-            except :
-                Fits = df(fit_y,index=x,columns=[i])
-            else :
-                Fits[i] = fit_y
-            FitParameters = FitParameters.append(fit.FitParameters)
-            
-            print("_"*100)
+            if i >= min(TBackground) and i <= max(TBackground) :
+                DataNames.append(i)
+        Background = df(Data[DataNames].mean(axis=1),columns=['Data'])
         
+        Resolution = Info['Resolution']
+        yCutOff = max(TBackground)
+        Data = dt.ReduceData(Data,yCutOff,Resolution)
+        
+        print('Fitting Background')
+        try :
+            Info['Background']['Models']
+        except :
+            Data_BC = Data.divide(Background['Data'],axis=0)
+            fig = px.line(x=Data.index,y=Background['Data'])
+            fig.update_layout(xaxis_title='Wavenumber (cm-1)',yaxis_title='Intensity (au)',width=500,height=300)
+            fig.show()
+        else :
+            fit = FitTools(Background,Info['Background'],'Background')
+            fit.Fit()
+            Background['Fit'] = fit.Fits['Data']
+            Data_BC = Data.divide(Background['Fit'],axis=0)
+        
+        print('\nFitting Data')
+
+        fit = FitTools(Data_BC,Info['Fit'])
+        fit.Fit()
+
+        Fits_BC = fit.Fits
+        FitsParameters = fit.FitsParameters
+        
+        if 'Fit' in Background :
+            Fits = Fits_BC.multiply(Background['Fit'],axis=0)
+        else :
+            Fits = Fits_BC.multiply(Background['Data'],axis=0)
+        
+        print('\nDone fitting data')
+        print('\n'+100*'_')
+        
+        ##### Show Fits & Data #####
+        
+        plt.figure(figsize = [6,4])
+        plt.plot(Background.index, Background['Data'],'k.', label='Data')
+        if 'Fit' in Background :
+            plt.plot(Background.index, Background['Fit'], 'r-', label='Fit')
+        plt.xlabel('WaveNumber (cm$^{-1}$)'), plt.ylabel('Intensity (au)')
+        plt.title('Background')
+        plt.show()
+        
+        print(100*'_')
+        
+        for Column in Data :
+    
+            plt.figure(figsize = [12,4])
+
+            plt.subplot(1, 2, 1)
+            plt.plot(Data.index, Data[Column],'k.', label='Data')
+            plt.plot(Fits.index, Fits[Column], 'r-', label='Fit')
+            plt.xlabel('WaveNumber (cm$^{-1}$)'), plt.ylabel('Intensity (au)')
+            plt.title('Temperature: '+str(Column)+' K')
+
+            plt.subplot(1, 2, 2)
+            plt.plot(Data_BC.index, Data_BC[Column],'k.', label='Data')
+            plt.plot(Fits_BC.index, Fits_BC[Column], 'r-', label='Fit')
+            plt.xlabel('WaveNumber (cm$^{-1}$)'), plt.ylabel('Intensity (au)')
+
+            plt.legend(frameon=False, loc='upper center', bbox_to_anchor=(1.2, 1), ncol=1)
+            plt.show()
+
+            Peaks = list()
+            for Parameter in FitsParameters.index :
+                Name = Parameter.split('_')[0]
+                if Name not in Peaks :
+                    Peaks.append(Name)
+
+            string = ''
+            for Peak in Peaks :
+                string = string + Peak + ' | '
+                for Parameter in FitsParameters.index :
+                    if Peak == Parameter.split('_')[0] : 
+                        string = string + Parameter.split('_')[1] + ': ' + str(round(FitsParameters[Column][Parameter],2))
+                        string = string + ', '
+                string = string[:-2] + '\n'
+            print(string)
+            print(100*'_')
+        
+        plt.figure(figsize = [8,12])
+        
+        plt.subplot(2, 1, 1)
         x = Data.index.values
         y = Data.columns.values
         z = np.transpose(Data.values)
-        
-        fig = plt.figure(figsize=(8,5))
-        plt.xlabel('Wavenumber (cm$^-$$^1$)', fontsize=16)
         plt.ylabel('Temperature (K)', fontsize=16)
         plt.tick_params(axis = 'both', which = 'major', labelsize = 16)
+        plt.title('Data', fontsize=16)
         pcm = plt.pcolor(x, y, z, cmap='jet')
-        plt.show()
         
+        plt.subplot(2, 1, 2)
         x = Fits.index.values
         y = Fits.columns.values
         z = np.transpose(Fits.values)
-        
-        fig = plt.figure(figsize=(8,5))
         plt.xlabel('Wavenumber (cm$^-$$^1$)', fontsize=16)
         plt.ylabel('Temperature (K)', fontsize=16)
         plt.tick_params(axis = 'both', which = 'major', labelsize = 16)
+        plt.title('Fits', fontsize=16)
         pcm = plt.pcolor(x, y, z, cmap='jet')
+        
         plt.show()
         
-        self.ModelParameters = fit.ModelParameters
-        self.Data2Fit = Data
+        plt.figure(figsize = [8,16])
+        
+        plt.subplot(4, 1, 1)
+        for Parameter in FitsParameters.T :
+            if 'amp' in Parameter :
+                plt.plot(FitsParameters.T[Parameter],'--.', label=Parameter)
+        plt.xlabel('Temperature (K)', fontsize=12)
+        plt.ylabel('Amplitude (au)', fontsize=12)
+        plt.legend(frameon=False, loc='upper center', bbox_to_anchor=(1.2, 1), ncol=1)
+        
+        plt.subplot(4, 1, 2)
+        for Parameter in FitsParameters.T :
+            if 'omega' in Parameter :
+                plt.plot(FitsParameters.T[Parameter],'--.', label=Parameter)
+        plt.xlabel('Temperature (K)', fontsize=12)
+        plt.ylabel('Omega (cm$^{-1}$)', fontsize=12)
+        plt.legend(frameon=False, loc='upper center', bbox_to_anchor=(1.2, 1), ncol=1)
+        
+        plt.subplot(4, 1, 3)
+        for Parameter in FitsParameters.T :
+            if 'phi' in Parameter :
+                plt.plot(FitsParameters.T[Parameter],'--.', label=Parameter)
+        plt.xlabel('Temperature (K)', fontsize=12)
+        plt.ylabel('Phi (Radians)', fontsize=12)
+        plt.legend(frameon=False, loc='upper center', bbox_to_anchor=(1.2, 1), ncol=1)
+        
+        plt.subplot(4, 1, 4)
+        for Parameter in FitsParameters.T :
+            if 'gamma' in Parameter :
+                plt.plot(FitsParameters.T[Parameter],'--.', label=Parameter)
+        plt.xlabel('Temperature (K)', fontsize=12)
+        plt.ylabel('Gamma (cm$^{-1}$)', fontsize=12)
+        plt.legend(frameon=False, loc='upper center', bbox_to_anchor=(1.2, 1), ncol=1)
+        plt.show()
+        
+        self.Data = Data
         self.Fits = Fits
-        self.FitParameters = FitParameters
+        self.FitsParameters = FitsParameters
