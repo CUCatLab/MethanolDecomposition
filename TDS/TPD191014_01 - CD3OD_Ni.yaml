@@ -1,0 +1,6 @@
+FolderPath: '../Data/191014'
+FileName: 'tpd191014_01.dat'
+Description: 'Deuterated methanol decomposition on Ni(111) mixed with H'
+Masses: [2,3,4,28,35,36]
+HeatingRate: [50,'K/min']
+TemperatureChannel: 1

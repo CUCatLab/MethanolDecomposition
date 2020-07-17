@@ -1,0 +1,5 @@
+FolderPath: '../Data/181022'
+FileName: 'tpd181022_01.dat'
+Description: 'Methanol decomposition on Ni(111)'
+Masses: [2,15,14,16,18,12,28,29,31,32,40,44]
+TemperatureChannel: 1

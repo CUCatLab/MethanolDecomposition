@@ -1,0 +1,38 @@
+FolderPath: '../Data/200327'
+FileName: 'SFG200327_01wn.pxp'
+DataName: 'SFG200327_01wn'
+Description: 'Methanol decomposition on Ni(111)'
+ROI: [1700,2150]
+Resolution: 2
+
+Background:
+  ModelType: 'BuiltIn'
+  TempRange: [400,500]
+  Threshold: 500
+  Models:
+    Background:
+      model: SkewedGaussian
+      center: {value: 2000, min: 1600}
+      sigma: {value: 100}
+      gamma: {value: 0}
+
+Fit:
+  ModelType: 'SFG'
+  Models:
+    NonRes:
+      amp: {value: 1, min: 0}
+    Peak1:
+      amp: {value: 25, min: 0}
+      phi: {value: 0.5, min: 0, max: 6.29}
+      omega: {value: 1845, min: 1750, max: 1900, vary: True}
+      gamma: {value: 20, min: 5, max: 40}
+    Peak2:
+      amp: {value: 15, min: 0}
+      phi: {value: 4.4, min: 0, max: 6.29}
+      omega: {value: 2040, min: 2000, max: 2200, vary: True}
+      gamma: {value: 20, min: 5, max: 40}
+    Peak3:
+      amp: {value: 6, min: 0}
+      phi: {value: 3.3, min: 0, max: 6.29}
+      omega: {value: 1930, min: 1900, max: 2000}
+      gamma: {value: 15, min: 5, max: 40}

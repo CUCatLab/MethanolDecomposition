@@ -1,0 +1,32 @@
+FolderPath: '../../Data Analysis'
+FileName: '2018.10 Methanol and Oxygen on Ni(111) SFG.pxp'
+DataName: 'SFG181011_01wnBG'
+Description: 'Methanol decomposition on O/Ni(111)'
+ROI: [1700,2150]
+Resolution: 2
+
+Background:
+  ModelType: 'BuiltIn'
+  TempRange: [400,500]
+  Threshold: 2000
+
+Data:
+  ModelType: 'SFG'
+  Models:
+    NonRes:
+      amp: {value: 1, min: 0}
+    Peak1:
+      amp: {value: 25, min: 0}
+      phi: {value: 0.5, min: 0, max: 6.3}
+      omega: {value: 1830, min: 1750, max: 1880, vary: True}
+      gamma: {value: 20, min: 5, max: 40}
+    Peak2:
+      amp: {value: 15, min: 0}
+      phi: {value: 4.4, min: 0, max: 6.3}
+      omega: {value: 2050, min: 1930, max: 2100, vary: True}
+      gamma: {value: 20, min: 5, max: 40}
+    Peak3:
+      amp: {value: 6, min: 0}
+      phi: {value: 3.3, min: 0, max: 6.3}
+      omega: {value: 1910, min: 1880, max: 1930}
+      gamma: {value: 15, min: 5, max: 40}
