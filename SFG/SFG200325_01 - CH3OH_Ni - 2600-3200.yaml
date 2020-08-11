@@ -2,13 +2,12 @@ FolderPath: '../Data/200325'
 FileName: 'SFG200325_01wn.pxp'
 DataName: 'SFG200325_01wn'
 Description: 'Methanol decomposition on Ni(111)'
-ROI: [2700,3200]
-Resolution: 10
+Resolution: 20
 
 Background:
-  ModelType: 'BuiltIn'
   TempRange: [400,500]
   Threshold: 0
+  ModelType: 'BuiltIn'
   Models:
     Background:
       model: SkewedGaussian
@@ -17,6 +16,7 @@ Background:
       gamma: {value: 0}
 
 Fit:
+  Range: [2700,3200]
   ModelType: 'SFG'
   Models:
     NonRes:
@@ -29,20 +29,15 @@ Fit:
     Peak2:
       amp: {value: 3.4, min: 0}
       phi: {value: 3.4, min: 0, max: 6.3}
-      omega: {value: 2933, min: 2920, max: 2950, vary: True}
+      omega: {value: 2933, min: 2910, max: 2950, vary: True}
       gamma: {value: 38.5, min: 6, max: 40}
     Peak3:
       amp: {value: 1, min: 0}
-      phi: {value: 4, min: 3.2, max: 3.6}
-      omega: {value: 2875, min: 2870, max: 2880}
+      phi: {value: 4}
+      omega: {value: 2875, min: 2860, max: 2900}
       gamma: {value: 8, min: 7, max: 10}
     Peak4:
       amp: {value: 2, min: 0}
-      phi: {value: 3.2, min: 2.8, max: 3.6}
-      omega: {value: 2815, min: 2810, max: 2820}
-      gamma: {value: 24, min: 3, max: 16}
-    Peak5:
-      amp: {value: 2, min: 0}
-      phi: {value: 3.3, min: 3.0, max: 3.6}
-      omega: {value: 2918.5, min: 2900, max: 2930}
-      gamma: {value: 9.5, min: 6, max: 12}
+      phi: {value: 3.3}
+      omega: {value: 3100, min: 3000, max: 3200}
+      gamma: {value: 90, min: 6, max: 100}

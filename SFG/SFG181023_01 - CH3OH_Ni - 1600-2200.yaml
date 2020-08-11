@@ -2,21 +2,14 @@ FolderPath: '../'
 FileName: '2018.10 Methanol and Oxygen on Ni(111) SFG.pxp'
 DataName: 'SFG181023_01wnBG'
 Description: 'Methanol decomposition on Ni(111)'
-ROI: [2700,3200]
 Resolution: 2
 
 Background:
   TempRange: [400,500]
   Threshold: 500
-  ModelType: 'BuiltIn'
-  Models:
-    Background:
-      model: SkewedGaussian
-      center: {value: 2800}
-      sigma: {value: 100}
-      gamma: {value: 0}
 
 Fit:
+  Range: [2700,3200]
   ModelType: 'SFG'
   Models:
     NonRes:

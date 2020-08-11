@@ -1,17 +1,14 @@
-FolderPath: '../'
-FileName: '2018.10 Methanol and Oxygen on Ni(111) SFG.pxp'
-DataName: 'SFG181009_01BGwn'
-Description: 'Methanol decomposition on O/Ni(111)'
-Resolution: 1
+FolderPath: '../Data/200326'
+FileName: 'SFG200326_02wn.pxp'
+DataName: 'SFG200326_02wn'
+Description: 'Methanol decomposition on Ni(111)'
+Resolution: 10
 
 Background:
   TempRange: [400,500]
   Threshold: 0
   ModelType: 'BuiltIn'
   Models:
-    Offset:
-      model: Constant
-      c: {value: 20000}
     Background:
       model: SkewedGaussian
       center: {value: 2800}
@@ -25,10 +22,9 @@ Fit:
     NonRes:
       amp: {value: 1, min: 0}
     Peak1:
-      assignment: 'MethanolCH3Stretch1'
       amp: {value: 15, min: 0}
       phi: {value: 3.5, min: 0, max: 6.3}
-      omega: {value: 2831, min: 2800, max: 2840, vary: True}
+      omega: {value: 2831, min: 2820, max: 2840, vary: True}
       gamma: {value: 13, min: 6, max: 20}
     Peak2:
       amp: {value: 3.4, min: 0}

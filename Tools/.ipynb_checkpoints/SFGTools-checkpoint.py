@@ -95,7 +95,6 @@ class DataTools :
         
         FolderPath = Parameters['FolderPath']
         FileName = Parameters['FileName']
-        DataName = Parameters['DataName']
 
         if FileName.endswith('.ibw') :
             d = binarywave.load(FolderPath + '/' + FileName)
@@ -123,6 +122,7 @@ class DataTools :
             z = np.arange(Start[1],Start[1]+y.shape[0]*Delta[1]-Delta[1]/2,Delta[1])
             print('Igor text data loaded')
         elif FileName.endswith('.pxp') :
+            DataName = Parameters['DataName']
             igor.ENCODING = 'UTF-8'
             d = igor.load(FolderPath + '/' + FileName)
             for i in range(len(d.children)) :
@@ -427,7 +427,7 @@ class FitTools :
         
         for idx,Column in enumerate(Data) :
             y = Data[Column].values
-            FitResults = FitModel.fit(y, ModelParameters, x=x)
+            FitResults = FitModel.fit(y, ModelParameters, x=x, nan_policy='omit')
             fit_comps = FitResults.eval_components(FitResults.params, x=fit_x)
             fit_y = FitResults.eval(x=fit_x)
             ParameterNames = [i for i in FitResults.params.keys()]
@@ -536,9 +536,6 @@ class SFG :
             Info['Background']['Models']
         except :
             Data_BC = Data.divide(Background['Data'],axis=0)
-            fig = px.line(x=Data.index,y=Background['Data'])
-            fig.update_layout(xaxis_title='Wavenumber (cm-1)',yaxis_title='Intensity (au)',width=500,height=300)
-            fig.show()
         else :
             print('Fitting Background')
             fit = FitTools(Background,Info['Background'],'Background')
@@ -671,6 +668,7 @@ class SFG :
         plt.legend(frameon=False, loc='upper center', bbox_to_anchor=(1.2, 1), ncol=1)
         plt.show()
         
+        self.Background = Background
         self.Data = Data
         self.Fits = Fits
         self.FitsParameters = FitsParameters

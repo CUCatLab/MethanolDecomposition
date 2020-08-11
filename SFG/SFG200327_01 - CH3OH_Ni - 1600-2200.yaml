@@ -2,21 +2,14 @@ FolderPath: '../Data/200327'
 FileName: 'SFG200327_01wn.pxp'
 DataName: 'SFG200327_01wn'
 Description: 'Methanol decomposition on Ni(111)'
-ROI: [1700,2150]
 Resolution: 2
 
 Background:
-  ModelType: 'BuiltIn'
   TempRange: [400,500]
   Threshold: 500
-  Models:
-    Background:
-      model: SkewedGaussian
-      center: {value: 2000, min: 1600}
-      sigma: {value: 100}
-      gamma: {value: 0}
 
 Fit:
+  Range: [1700,2150]
   ModelType: 'SFG'
   Models:
     NonRes:

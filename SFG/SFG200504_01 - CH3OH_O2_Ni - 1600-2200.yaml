@@ -1,9 +1,7 @@
 FolderPath: '../Data/200504'
 FileName: 'SFG200504_01.sif'
-DataName: 'SFG200504_01'
 Description: 'Methanol decomposition on O/Ni(111)'
-ROI: [1700,2150]
-Resolution: 2
+Resolution: 20
 
 Heating:
   Frame: [1,44,58,72,85,109]
@@ -11,17 +9,11 @@ Heating:
   Rate: [2.34,2.90,3.00,2.94,2.96,2.98] # K/min
 
 Background:
-  ModelType: 'BuiltIn'
   TempRange: [400,500]
   Threshold: 2
-  Models:
-    Background:
-      model: SkewedGaussian
-      center: {value: 2000, min: 1600}
-      sigma: {value: 100}
-      gamma: {value: 0}
 
 Fit:
+  Range: [1700,2150]
   ModelType: 'SFG'
   Models:
     NonRes:
