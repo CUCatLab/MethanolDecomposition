@@ -517,6 +517,8 @@ class SFG :
         Data = self.Data
         Info = self.Info
         
+        print(Info['Description'])
+        
         ##### Fit Data #####
         
         data = DataTools()
@@ -598,17 +600,23 @@ class SFG :
                 Name = Parameter.split('_')[0]
                 if Name not in Peaks :
                     Peaks.append(Name)
-
+            
             string = ''
             for Peak in Peaks :
-                string = string + Peak + ' | '
+                if 'assignment' in Info['Fit']['Models'][Peak] :
+                    string += Info['Fit']['Models'][Peak]['assignment'] + ' | '
+                else :
+                    string += Peak + ' | '
                 for Parameter in FitsParameters.index :
                     if Peak == Parameter.split('_')[0] : 
-                        string = string + Parameter.split('_')[1] + ': ' + str(round(FitsParameters[Column][Parameter],2))
-                        string = string + ', '
+                        string += Parameter.split('_')[1] + ': ' + str(round(FitsParameters[Column][Parameter],2))
+                        string += ', '
                 string = string[:-2] + '\n'
             print(string)
             print(100*'_')
+        FitsParameters = FitsParameters.T
+        
+        # Plot 2D Data & Fits
         
         plt.figure(figsize = [8,12])
         
@@ -633,40 +641,20 @@ class SFG :
         
         plt.show()
         
-        plt.figure(figsize = [8,16])
-        
-        plt.subplot(4, 1, 1)
-        for Parameter in FitsParameters.T :
-            if 'amp' in Parameter :
-                plt.plot(FitsParameters.T[Parameter],'--.', label=Parameter)
-        plt.xlabel('Temperature (K)', fontsize=12)
-        plt.ylabel('Amplitude (au)', fontsize=12)
-        plt.legend(frameon=False, loc='upper center', bbox_to_anchor=(1.2, 1), ncol=1)
-        
-        plt.subplot(4, 1, 2)
-        for Parameter in FitsParameters.T :
-            if 'omega' in Parameter :
-                plt.plot(FitsParameters.T[Parameter],'--.', label=Parameter)
-        plt.xlabel('Temperature (K)', fontsize=12)
-        plt.ylabel('Omega (cm$^{-1}$)', fontsize=12)
-        plt.legend(frameon=False, loc='upper center', bbox_to_anchor=(1.2, 1), ncol=1)
-        
-        plt.subplot(4, 1, 3)
-        for Parameter in FitsParameters.T :
-            if 'phi' in Parameter :
-                plt.plot(FitsParameters.T[Parameter],'--.', label=Parameter)
-        plt.xlabel('Temperature (K)', fontsize=12)
-        plt.ylabel('Phi (Radians)', fontsize=12)
-        plt.legend(frameon=False, loc='upper center', bbox_to_anchor=(1.2, 1), ncol=1)
-        
-        plt.subplot(4, 1, 4)
-        for Parameter in FitsParameters.T :
-            if 'gamma' in Parameter :
-                plt.plot(FitsParameters.T[Parameter],'--.', label=Parameter)
-        plt.xlabel('Temperature (K)', fontsize=12)
-        plt.ylabel('Gamma (cm$^{-1}$)', fontsize=12)
-        plt.legend(frameon=False, loc='upper center', bbox_to_anchor=(1.2, 1), ncol=1)
-        plt.show()
+        # Plot Trends
+
+        UniqueParameters = []
+        [UniqueParameters.append(x.split('_')[1]) for x in FitsParameters.columns if x.split('_')[1] not in UniqueParameters][0]
+        for uniqueParameter in UniqueParameters :
+            fig = go.Figure()
+            for parameter in FitsParameters :
+                if uniqueParameter in parameter :
+                    Name = parameter.split('_')[0]
+                    if 'assignment' in Info['Fit']['Models'][Name] :
+                        Name = Info['Fit']['Models'][Name]['assignment']
+                    fig.add_trace(go.Scatter(x=FitsParameters.index,y=FitsParameters[parameter],name=Name,mode='lines+markers'))
+            fig.update_layout(xaxis_title='Temperature (K)',yaxis_title='Fit Value',title=uniqueParameter,legend_title='',width=800,height=400)
+            fig.show()
         
         self.Background = Background
         self.Data = Data
