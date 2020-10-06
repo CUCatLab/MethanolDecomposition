@@ -19,7 +19,8 @@ Background:
       gamma: {value: 0}
 
 Fit:
-  Range: [2700,3200]
+  WNRange: [2700,3200]
+  TempRange: [0,150]
   ModelType: 'SFG'
   Models:
     NonRes:

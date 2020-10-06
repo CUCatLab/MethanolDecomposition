@@ -2,4 +2,18 @@ FolderPath: '../Data/191010'
 FileName: 'tpd191010_01.dat'
 Description: 'Deuterated methanol decomposition on Ni(111) mixed with H'
 Masses: [2,3,4,28,35,36]
-HeatingRate: [50,'K/min']
+
+Simulations:
+  H2:
+    Peak1: {Offset: 60000, Scaling: 1500000, Coverage: 1, Barrier: 0.470, Prefactor: 1.5e+7, Order: 1}
+    Peak2: {Offset: 0, Scaling: 1500000, Coverage: 1, Barrier: 0.58, Prefactor: 1.5e+7, Order: 1}
+  HD:
+    Peak1: {Offset: 60000, Scaling: 4800000, Coverage: 0.25, Barrier: 0.610, Prefactor: 1.5e+10, Order: 1}
+    Peak2: {Offset: 0, Scaling: 4800000, Coverage: 1, Barrier: 0.75, Prefactor: 1.5e+10, Order: 1}
+  D2:
+    Peak1: {Offset: 1000, Scaling: 4800000, Coverage: 0.25, Barrier: 0.410, Prefactor: 1.0e+8, Order: 1}
+    Peak2: {Offset: 0, Scaling: 4800000, Coverage: 1, Barrier: 0.5, Prefactor: 1.0e+8, Order: 1}
+  CO:
+    Peak1: {Offset: 23500, Scaling: 2400000, Coverage: 1, Barrier: 1.12, Prefactor: 1.0e+13, Order: 1}
+  Methanol:
+    Peak1: {Offset: 0, Scaling: 1000000, Coverage: 1, Barrier: 0.385, Prefactor: 3.59e+12, Order: 1}

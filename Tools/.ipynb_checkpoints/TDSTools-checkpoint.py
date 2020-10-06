@@ -56,7 +56,6 @@ class DataTools :
             fileContent = file.read()
 
         NumChan = len(Masses) + 1
-        Header = 31
         DataLength = int((len(fileContent)-5)/(46*NumChan))
         Data = np.zeros((int(1+NumChan),DataLength))
 
@@ -68,27 +67,28 @@ class DataTools :
                 else :
                     index = int(43+j*46*NumChan + (i-1)*46)
                     Data[i,j] = struct.unpack('<d', fileContent[index:index+8])[0]
-        Data = Data[1:]
         
         Header = list()
-        for idx in range(len(Data)) :
+        Header.append('Time (s)')
+        for idx in range(NumChan) :
             if idx == 0 :
                 Header.append('Temperature (K)')
             else :
                 Header.append('Mass '+str(Masses[idx-1]))
         Data = df(np.transpose(Data),columns=Header)
+        Data = Data.set_index('Temperature (K)')
+        
+        Parameters['HeatingRate'] = np.mean(np.diff(Data.index)/np.diff(Data['Time (s)']))
             
         return Data, Parameters
     
     def TrimData(self,Data,Min,Max) :
         
-        iMin = (np.abs(Data['Temperature (K)'].values - Min)).argmin()
-        iMax = (np.abs(Data['Temperature (K)'].values - Max)).argmin() + 1
-        Data = df.drop(Data,index=range(iMax,len(Data)))
-        Data = df.drop(Data,index=range(iMin))
+        Mask = np.all([Data.index.values>Min,Data.index.values<Max],axis=0)
+        Data = Data[Mask]
         
         return Data
-    
+
 class TDS :
     
     def __init__(self,ParameterFile) :
@@ -111,3 +111,57 @@ class TDS :
         
         self.Data = Data
         self.Parameters = Parameters
+    
+    def SimulateData(self,Rate) :
+        
+        Data = self.Data
+        Parameters = self.Parameters
+        
+        if 'Simulations' in Parameters :
+
+            # Initial parameters
+            kB = 8.617e-5                 # eV/K
+            T0 = 100                      # K
+            
+            Temperature, deltaT = np.linspace(min(Data.index),max(Data.index),1001,retstep =True)
+            Time = Temperature / Rate
+            deltat = deltaT / Rate
+            Size = len(Temperature)
+            
+            Traces = df(index=Temperature)
+            Coverages = df(index=Temperature)
+            
+            # Calculate traces
+            for Mass in Parameters['Simulations'] :
+                Trace = np.zeros((Size))
+                Coverage = np.zeros((Size))
+                for idx, Peak in enumerate(Parameters['Simulations'][Mass]) :
+                    PeakParameters = Parameters['Simulations'][Mass][Peak]
+                    Offset = PeakParameters['Offset']
+                    Scaling = PeakParameters['Scaling']
+                    Ni = PeakParameters['Coverage']
+                    Ea = PeakParameters['Barrier']
+                    nu = PeakParameters['Prefactor']
+                    n = PeakParameters['Order']
+                    
+                    PeakTrace = np.zeros((Size))
+                    PeakCoverage = np.zeros((Size))
+                    IntRate = 0
+                    for idx, T in enumerate(Temperature) :
+                        PeakTrace[idx] = nu*(Ni - IntRate)**n * np.exp(-Ea/(kB*T))
+                        IntRate += PeakTrace[idx] * deltat
+                        PeakCoverage[idx] = Ni - IntRate
+                        if IntRate >= Ni :
+                            IntRate = Ni
+                            PeakCoverage[idx] = 0
+                        if PeakCoverage[idx] < 0 or PeakCoverage[idx] > Ni :
+                            PeakCoverage[idx] = 0
+                            PeakTrace[idx] = 0
+                    Trace += PeakTrace * Scaling + Offset
+                    Coverage += PeakCoverage
+                
+                Traces[Mass] = Trace
+                Coverages[Mass] = Coverage
+                
+        self.SimulatedData = Traces
+        self.SimulatedCoverages = Coverages

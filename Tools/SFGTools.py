@@ -220,6 +220,10 @@ class FitTools :
     
     def __init__(self,Data,FitInfo,Name='') :
         
+        self.Data = Data
+        self.FitInfo = FitInfo
+        self.Name = Name
+        
         try :
             FitInfo['ModelType']
             FitInfo['Models']
@@ -228,20 +232,32 @@ class FitTools :
             ModelString = ''
         else :
             if FitInfo['ModelType'] == 'BuiltIn' :
-                self.BuiltInModels(FitInfo)
+                self.BuiltInModels()
             if FitInfo['ModelType'] == 'SFG' :
-                self.SFGModel(FitInfo)
-            for Model in FitInfo['Models'] :
-                for Parameter in FitInfo['Models'][Model] :
-                    if Parameter != 'model' and Parameter != 'assignment' :
-                        for Key in FitInfo['Models'][Model][Parameter] :
-                            exec('self.ModelParameters["'+Model+'_'+Parameter+'"].'+Key+'='+str(FitInfo['Models'][Model][Parameter][Key]))
+                self.SFGModel()
         
-        self.Data = Data
-        self.FitInfo = FitInfo
-        self.Name = Name
-
-    def BuiltInModels(self,FitInfo) :
+    def SetParameters(self, Temperature = None) :
+        
+        FitInfo = self.FitInfo
+        
+        ParameterList = ['amp','phi','omega','gamma','center','sigma','c']
+        for Model in FitInfo['Models'] :
+            for Parameter in FitInfo['Models'][Model] :
+                if Parameter in ParameterList :
+                    for Key in FitInfo['Models'][Model][Parameter] :
+                        exec('self.ModelParameters["'+Model+'_'+Parameter+'"].'+Key+'='+str(FitInfo['Models'][Model][Parameter][Key]))
+        if 'Cases' in FitInfo and Temperature != None:
+            for Case in FitInfo['Cases'] :
+                if Temperature >= min(FitInfo['Cases'][Case]['temp']) and Temperature <= max(FitInfo['Cases'][Case]['temp']) :
+                    for Model in FitInfo['Cases'][Case] :
+                        for Parameter in FitInfo['Cases'][Case][Model] :
+                            if Parameter in ParameterList :
+                                for Key in FitInfo['Cases'][Case][Model][Parameter] :
+                                    exec('self.ModelParameters["'+Model+'_'+Parameter+'"].'+Key+'='+str(FitInfo['Cases'][Case][Model][Parameter][Key]))
+    
+    def BuiltInModels(self) :
+        
+        FitInfo = self.FitInfo
         
         ModelString = list()
         for key in FitInfo['Models'] :
@@ -276,7 +292,9 @@ class FitTools :
         self.FitModel = FitModel
         self.ModelParameters = FitModel.make_params()
         
-    def SFGModel(self,FitInfo) :
+    def SFGModel(self) :
+        
+        FitInfo = self.FitInfo
         
         ModelString = list()
         for key in FitInfo['Models'] :
@@ -426,6 +444,9 @@ class FitTools :
         FitsComponents = list()
         
         for idx,Column in enumerate(Data) :
+            
+            self.SetParameters(Column)
+            
             y = Data[Column].values
             FitResults = FitModel.fit(y, ModelParameters, x=x, nan_policy='omit')
             fit_comps = FitResults.eval_components(FitResults.params, x=fit_x)
@@ -548,7 +569,14 @@ class SFG :
                 Data_BC = data.TrimData(Data_BC,Info['Fit']['Range'][0],Info['Fit']['Range'][1])
         
         print('\nFitting Data')
-
+        
+        if 'TempRange' in Info['Fit'] :
+            T_mask = []
+            T_mask.append(Data.columns<=max(Info['Fit']['TempRange']))
+            T_mask.append(Data.columns>=min(Info['Fit']['TempRange']))
+            T_mask = np.all(T_mask, axis=0)
+            Data_BC = Data_BC.T[T_mask].T
+        
         fit = FitTools(Data_BC,Info['Fit'])
         fit.Fit(fit_x=Data.index.values)
 
@@ -575,7 +603,7 @@ class SFG :
         
         print(100*'_')
         
-        for Column in Data :
+        for Column in Data_BC :
     
             plt.figure(figsize = [12,4])
 
@@ -584,7 +612,7 @@ class SFG :
             plt.plot(Fits.index, Fits[Column], 'r-', label='Fit')
             plt.xlabel('WaveNumber (cm$^{-1}$)'), plt.ylabel('Intensity (au)')
             plt.title('Temperature: '+str(Column)+' K')
-
+            
             plt.subplot(1, 2, 2)
             plt.plot(Data_BC.index, Data_BC[Column],'k.', label='Data')
             plt.plot(Fits_BC.index, Fits_BC[Column], 'r-', label='Fit')

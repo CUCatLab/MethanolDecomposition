@@ -1,0 +1,47 @@
+FolderPath: '../Data/200325'
+FileName: 'SFG200325_01wn.pxp'
+DataName: 'SFG200325_01wn'
+Description: 'Methanol decomposition on Ni(111)'
+Resolution: 20
+
+Background:
+  TempRange: [400,500]
+  Threshold: 0
+  ModelType: 'BuiltIn'
+  Models:
+    Background:
+      model: SkewedGaussian
+      center: {value: 2800}
+      sigma: {value: 100}
+      gamma: {value: 0}
+
+Fit:
+  Range: [2700,3200]
+  ModelType: 'SFG'
+  Models:
+    NonRes:
+      amp: {value: 1, min: 0}
+    Peak1:
+      assignment: 'Methonal_CH3_1'
+      amp: {value: 15, min: 0}
+      phi: {value: 3.5, min: 0, max: 6.3, vary: True}
+      omega: {value: 2846, min: 2810, max: 2855, vary: False}
+      gamma: {value: 17, min: 10, max: 40, vary: True}
+    Peak2:
+      assignment: 'Methonal_CH3_2'
+      amp: {value: 15, min: 0}
+      phi: {value: 3.4, min: 0, max: 6.3, vary: True}
+      omega: {value: 2870, min: 2860, max: 2910, vary: False}
+      gamma: {value: 15, min: 10, max: 60, vary: True}
+    Peak3:
+      assignment: 'Methonal_CH3_3'
+      amp: {value: 12, min: 0}
+      phi: {value: 3.2, min: 0, max: 3.6, vary: True}
+      omega: {value: 2933, min: 2910, max: 2970, vary: False}
+      gamma: {value: 28, min: 10, max: 60, vary: True}
+    Peak4:
+      assignment: 'Methonal_OH'
+      amp: {value: 12, min: 0}
+      phi: {value: 3.2, min: 0, max: 3.6, vary: True}
+      omega: {value: 3040, min: 3000, max: 3400, vary: False}
+      gamma: {value: 84, min: 10, max: 120, vary: True}
