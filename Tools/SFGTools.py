@@ -643,6 +643,7 @@ class SFG :
             print(string)
             print(100*'_')
         FitsParameters = FitsParameters.T
+        FitsParameters = FitsParameters[np.concatenate((FitsParameters.columns.values[1:],FitsParameters.columns.values[0:1]))]
         
         # Plot 2D Data & Fits
         
@@ -670,7 +671,7 @@ class SFG :
         plt.show()
         
         # Plot Trends
-
+        
         UniqueParameters = []
         [UniqueParameters.append(x.split('_')[1]) for x in FitsParameters.columns if x.split('_')[1] not in UniqueParameters][0]
         for uniqueParameter in UniqueParameters :
