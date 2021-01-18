@@ -1,0 +1,43 @@
+FolderPath: '../Data/200327'
+FileName: 'SFG200327_01wn.pxp'
+DataName: 'SFG200327_01wn'
+Description: 'Methanol decomposition on Ni(111)'
+Resolution: 1
+
+Background:
+  zRange: [100,200]
+  Threshold: 500
+
+Fit:
+  xRange: [1750,2120]
+  zRange: [0,600]
+  ModelType: 'SFG'
+  ShowFits: False
+  Models:
+    NonRes:
+      amp: {value: 1, min: 0}
+    Peak1:
+      assignment: 'CO stretch, bridge/hollow'
+      amp: {value: 38, min: 0, vary: True}
+      phi: {value: 3.3, min: 0, max: 6.29, vary: False}
+      omega: {value: 1863, min: 1800, max: 1900, vary: True}
+      gamma: {value: 38.5, min: 25, max: 55, vary: False}
+    Peak2:
+      assignment: 'CO stretch, top'
+      amp: {value: 25, min: 0, vary: True}
+      phi: {value: 3.9, min: 0, max: 6.29, vary: False}
+      omega: {value: 2036, min: 2020, max: 2060, vary: True}
+      gamma: {value: 33, min: 30, max: 40, vary: False}
+  Cases:
+    LowT1:
+      zRange: [0,240]
+      Peak1:
+        amp: {value: 0, vary: False}
+      Peak2:
+        amp: {value: 0, vary: False}
+    HighT:
+      zRange: [410,1000]
+      Peak1:
+        amp: {value: 0, vary: False}
+      Peak2:
+        amp: {value: 0, vary: False}

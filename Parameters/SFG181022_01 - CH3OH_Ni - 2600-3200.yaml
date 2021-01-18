@@ -1,0 +1,110 @@
+# FolderPath: '../Data/181022'
+# FileName: 'sfg181022_01.sif'
+# Description: 'Methanol decomposition on Ni(111)'
+# Resolution: 1
+
+FolderPath: '../'
+FileName: '2018.10 Methanol and Oxygen on Ni(111) SFG.pxp'
+DataName: 'SFG181022_01wnBG'
+Description: 'Methanol decomposition on Ni(111)'
+Resolution: 1
+
+Heating:
+  Frame: [9,14,24,34,45,58]
+  Temperature: [135.8, 164.9, 224.7, 285.4, 351.8, 430.8] # K
+  Rate: [2.82, 2.83, 2.97, 2.94, 2.99, 2.98] # K/min
+
+Background:
+  zRange: [400,500]
+  Threshold: 0
+  ModelType: 'BuiltIn'
+  Peaks:
+    Background:
+      model: SkewedGaussian
+      center: {value: 2800, vary: True}
+      sigma: {value: 100, vary: True}
+      gamma: {value: 0, vary: True}
+
+Fit:
+  xRange: [2700,3300]
+  zRange: [0,600]
+  ShowFits: False
+  ModelType: 'SFG'
+  Models:
+    NonRes:
+      amp: {value: 1, min: 0}
+    Peak1:
+      assignment: 'Methanol CH3 symmetric stretch'
+      amp: {value: 10, min: 0, max: 50, vary: True}
+      phi: {value: 3.4, min: 0, max: 6.3, vary: True}
+      omega: {value: 2832, min: 2825, max: 2835, vary: True}
+      gamma: {value: 13, min: 6, max: 25, vary: True}
+    Peak2:
+      assignment: 'Methanol CH3 asymmetric stretch (a)'
+      amp: {value: 10, min: 0, max: 25, vary: True}
+      phi: {value: 3.4, min: 0, max: 6.3, vary: True}
+      omega: {value: 2925, min: 2920, max: 2930, vary: True}
+      gamma: {value: 22, min: 6, max: 25, vary: False}
+    Peak3:
+      assignment: "Methanol CH3 asymmetric stretch (a')"
+      amp: {value: 10, min: 0, max: 25, vary: True}
+      phi: {value: 3.4, min: 0, max: 6.3, vary: True}
+      omega: {value: 2938, min: 2935, max: 2945, vary: True}
+      gamma: {value: 22, min: 6, max: 25, vary: False}
+    Peak4:
+      assignment: 'Methoxy CH3 symmetric stretch'
+      amp: {value: 15, min: 0, vary: True}
+      phi: {value: 3.5, min: 0, max: 6.3, vary: True}
+      omega: {value: 2819, min: 2815, max: 2825, vary: True}
+      gamma: {value: 9, min: 6, max: 15, vary: False}
+    Peak5:
+      assignment: 'Methoxy CH3 symmetric bend (overtone)'
+      amp: {value: 10, min: 0, max: 50, vary: True}
+      phi: {value: 3.4, min: 0, max: 6.3, vary: True}
+      omega: {value: 2876, min: 2870, max: 2880, vary: True}
+      gamma: {value: 15, min: 6, max: 25, vary: False}
+    Peak6:
+      assignment: 'Methoxy CH3 asymmetric stretch'
+      amp: {value: 10, min: 0, max: 50, vary: True}
+      phi: {value: 3.4, min: 0, max: 6.3, vary: True}
+      omega: {value: 2915, min: 2910, max: 2920, vary: True}
+      gamma: {value: 15, min: 6, max: 25, vary: False}
+    Peak7:
+      assignment: 'Water OH stretch'
+      amp: {value: 10, min: 0, max: 50, vary: True}
+      phi: {value: 5.0, min: 0, max: 6.3, vary: True}
+      omega: {value: 3046, min: 3000, max: 3500, vary: False}
+      gamma: {value: 184, min: 50, max: 400, vary: False}
+  Cases:
+    Methanol:
+      zRange: [0,145]
+      Peak4:
+        amp: {value: 0, vary: False}
+      Peak5:
+        amp: {value: 0, vary: False}
+      Peak6:
+        amp: {value: 0, vary: False}
+    Methoxy:
+      zRange: [155,1000]
+      Peak1:
+        amp: {value: 0, vary: False}
+      Peak2:
+        amp: {value: 0, vary: False}
+      Peak3:
+        amp: {value: 0, vary: False}
+      Peak7:
+        amp: {value: 0, vary: False}
+    HighT1:
+      zRange: [305, 1000]
+      Peak1:
+        amp: {value: 0, vary: False}
+      Peak2:
+        amp: {value: 0, vary: False}
+      Peak3:
+        amp: {value: 0, vary: False}
+      Peak4:
+        amp: {value: 0, vary: False}
+      Peak5:
+        amp: {value: 0, vary: False}
+      Peak6:
+        amp: {value: 0, vary: False}

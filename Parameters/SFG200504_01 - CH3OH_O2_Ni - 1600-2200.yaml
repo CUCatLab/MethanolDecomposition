@@ -1,0 +1,60 @@
+FolderPath: '../Data/200504'
+FileName: 'SFG200504_01.sif'
+Description: 'Methanol decomposition on O/Ni(111)'
+Resolution: 1
+
+Heating:
+  Frame: [1,44,58,72,85,109]
+  Temperature: [111.0,209.7,243.3,277.1,308.6,366.8] # K
+  Rate: [2.34,2.90,3.00,2.94,2.96,2.98] # K/min
+
+Background:
+  zRange: [400,500]
+  Threshold: 2
+
+Fit:
+  xRange: [1680,2200]
+  zRange: [0,600]
+  ModelType: 'SFG'
+  ShowFits: False
+  Models:
+    NonRes:
+      amp: {value: 1, min: 0}
+    Peak1:
+      assignment: 'CO stretch, bridge/hollow'
+      amp: {value: 38, min: 0, vary: True}
+      phi: {value: 3.7, min: 0, max: 6.29, vary: False}
+      omega: {value: 1863, min: 1839, max: 1880, vary: True}
+      gamma: {value: 35, min: 25, max: 55, vary: False}
+    Peak2:
+      assignment: 'CO stretch, top'
+      amp: {value: 25, min: 0, vary: True}
+      phi: {value: 3, min: 0, max: 6.29, vary: False}
+      omega: {value: 2036, min: 2032, max: 2050, vary: True}
+      gamma: {value: 20, min: 10, max: 55, vary: False}
+    Peak3:
+      assignment: 'Background'
+      amp: {value: 25, min: 0, vary: False}
+      phi: {value: 4.12, min: 0, max: 6.29, vary: False}
+      omega: {value: 1771, min: 1700, max: 1950, vary: False}
+      gamma: {value: 89, min: 25, vary: False}
+    Peak4:
+      assignment: 'Background'
+      amp: {value: 11, min: 0, vary: False}
+      phi: {value: 2.34, min: 0, max: 6.29, vary: False}
+      omega: {value: 1994, min: 1950, max: 2200, vary: False}
+      gamma: {value: 36, min: 10, vary: False}
+  Cases:
+    LowT1:
+      zRange: [0,270]
+      Peak1:
+        # omega: {value: 1780}
+        amp: {value: 0, vary: False}
+      Peak2:
+        amp: {value: 0, vary: False}
+    HighT:
+      zRange: [410,1000]
+      Peak1:
+        amp: {value: 0, vary: False}
+      Peak2:
+        amp: {value: 0, vary: False}
